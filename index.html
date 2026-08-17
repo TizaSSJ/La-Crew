@@ -578,26 +578,56 @@ const DAYS_ES = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const ADMIN_PASS = 'crew123';
 const GITHUB_REPO = 'TizaSSJ/La-Crew';
-const GITHUB_RAW = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/main/data.json';
-const GITHUB_API = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data.json';
+const GITHUB_API_BASE = 'https://api.github.com/repos/' + GITHUB_REPO;
+const GITHUB_API = GITHUB_API_BASE + '/contents/data.json';
 let currentYear, currentMonth, matches = [], players = [], isAdmin = false;
 let deleteMatchTargetId = null, deletePlayerTargetId = null, badgeBase64 = null, playerPhotoBase64 = null;
 let selectedDay = null, selectedConv = [], statsPeriod = 'month';
-let dataSha = null, githubToken = null;
+let dataSha = null, githubToken = null, githubBranch = null;
 
 function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); githubToken = localStorage.getItem('crew_gh_token') || null; loadFromGitHub().then(() => render()); }
 
 function setSyncStatus(status) { const el = document.getElementById('syncStatus'); if (status === 'syncing') { el.textContent = 'Sincronizando...'; el.className = 'sync-status syncing'; } else if (status === 'synced') { el.textContent = 'Sincronizado'; el.className = 'sync-status synced'; setTimeout(() => { el.textContent = ''; el.className = 'sync-status'; }, 2000); } else if (status === 'error') { el.textContent = 'Error de conexion'; el.className = 'sync-status error'; } else if (status === 'local') { el.textContent = 'Modo local'; el.className = 'sync-status'; } else { el.textContent = ''; el.className = 'sync-status'; } }
 
-async function loadFromGitHub() { try { setSyncStatus('syncing'); const resp = await fetch(GITHUB_RAW + '?t=' + Date.now()); if (!resp.ok) throw new Error('Not found'); const data = await resp.json(); matches = data.matches || []; players = data.players || []; localStorage.setItem('crew_matches', JSON.stringify(matches)); localStorage.setItem('crew_players', JSON.stringify(players)); await fetchSha(); setSyncStatus('synced'); } catch (e) { console.warn('GitHub load failed, using localStorage:', e); try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; } setSyncStatus('local'); } }
+async function detectBranch() {
+    if (githubBranch) return githubBranch;
+    try {
+        const resp = await fetch(GITHUB_API_BASE, { headers: githubToken ? { 'Authorization': 'token ' + githubToken } : {} });
+        if (resp.ok) { const data = await resp.json(); githubBranch = data.default_branch || 'main'; return githubBranch; }
+    } catch (e) {}
+    githubBranch = 'main';
+    return githubBranch;
+}
+
+async function loadFromGitHub() {
+    try {
+        setSyncStatus('syncing');
+        const branch = await detectBranch();
+        const rawUrl = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + branch + '/data.json';
+        const resp = await fetch(rawUrl + '?t=' + Date.now());
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const text = await resp.text();
+        const data = JSON.parse(text);
+        matches = data.matches || [];
+        players = data.players || [];
+        localStorage.setItem('crew_matches', JSON.stringify(matches));
+        localStorage.setItem('crew_players', JSON.stringify(players));
+        await fetchSha();
+        setSyncStatus('synced');
+    } catch (e) {
+        console.warn('GitHub load failed:', e);
+        try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; }
+        setSyncStatus('local');
+    }
+}
 
 async function fetchSha() {
     if (!githubToken) return;
     try {
-        const resp = await fetch(GITHUB_API, { headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' } });
+        const branch = await detectBranch();
+        const resp = await fetch(GITHUB_API + '?ref=' + branch, { headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' } });
         if (resp.ok) { const data = await resp.json(); dataSha = data.sha; }
         else if (resp.status === 404) { dataSha = null; }
-        else { const err = await resp.json().catch(() => ({})); console.warn('SHA fetch error:', resp.status, err.message); }
     } catch (e) { console.warn('SHA fetch failed:', e); }
 }
 
@@ -607,10 +637,11 @@ async function saveToGitHub() {
     if (!githubToken) { setSyncStatus('local'); return; }
     try {
         setSyncStatus('syncing');
+        const branch = await detectBranch();
         if (!dataSha) await fetchSha();
         const payload = JSON.stringify({ matches, players });
         const b64 = btoa(unescape(encodeURIComponent(payload)));
-        const body = { message: 'Actualizado desde La Crew FC', content: b64 };
+        const body = { message: 'Actualizado desde La Crew FC', content: b64, branch: branch };
         if (dataSha) body.sha = dataSha;
         const resp = await fetch(GITHUB_API, {
             method: 'PUT',
@@ -619,10 +650,9 @@ async function saveToGitHub() {
         });
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            const msg = err.message || ('HTTP ' + resp.status);
             console.error('GitHub API error:', resp.status, err);
             setSyncStatus('error');
-            document.getElementById('syncStatus').textContent = 'Error: ' + msg;
+            document.getElementById('syncStatus').textContent = 'Error: ' + (err.message || resp.status);
             return;
         }
         const data = await resp.json();
