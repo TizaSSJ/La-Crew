@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Crew FC</title>
     <link rel="icon" type="image/jpeg" href="myimage.jpg">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -476,7 +478,6 @@
         <p class="subtitle">Modo administrador</p>
         <div class="form-group"><label>Usuario</label><input type="text" id="loginUser" placeholder="Tu nombre"></div>
         <div class="form-group"><label>Contrasena</label><input type="password" id="loginPass" placeholder="Contrasena de admin"></div>
-        <div class="form-group"><label>GitHub Token (para guardar en la nube)</label><input type="password" id="loginToken" placeholder="ghp_xxxx... (opcional)"></div>
         <div class="login-error" id="loginError"></div>
         <button class="btn btn-primary" onclick="doLogin()" style="margin-bottom:8px;">Entrar</button>
         <button class="btn btn-ghost" onclick="closeLoginModal()" style="width:100%;justify-content:center;">Cancelar</button>
@@ -579,116 +580,71 @@
 const DAYS_ES = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const ADMIN_PASS = 'crew123';
-const GITHUB_REPO = 'TizaSSJ/La-Crew';
-const GITHUB_API_BASE = 'https://api.github.com/repos/' + GITHUB_REPO;
-const GITHUB_API = GITHUB_API_BASE + '/contents/data.json';
+const firebaseConfig = { apiKey: "AIzaSyDnNVc1TCukmcwIt5PCenXXGjuHPDHo9Ck", authDomain: "la-crew-fc.firebaseapp.com", projectId: "la-crew-fc", storageBucket: "la-crew-fc.firebasestorage.app", messagingSenderId: "216508219693", appId: "1:216508219693:web:f3b78dbd664623180193a4" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 let currentYear, currentMonth, matches = [], players = [], isAdmin = false;
 let deleteMatchTargetId = null, deletePlayerTargetId = null, badgeBase64 = null, playerPhotoBase64 = null;
 let selectedDay = null, selectedConv = [], statsPeriod = 'month';
-let dataSha = null, githubToken = null, githubBranch = null;
+let unsubscribe = null;
 
-function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); githubToken = localStorage.getItem('crew_gh_token') || null; loadFromGitHub().then(() => render()); }
+function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); listenToCloud(); }
 
 function setSyncStatus(status) { const el = document.getElementById('syncStatus'); if (status === 'syncing') { el.textContent = 'Sincronizando...'; el.className = 'sync-status syncing'; } else if (status === 'synced') { el.textContent = 'Sincronizado'; el.className = 'sync-status synced'; setTimeout(() => { el.textContent = ''; el.className = 'sync-status'; }, 2000); } else if (status === 'error') { el.textContent = 'Error de conexion'; el.className = 'sync-status error'; } else if (status === 'local') { el.textContent = 'Modo local'; el.className = 'sync-status'; } else { el.textContent = ''; el.className = 'sync-status'; } }
 function setSyncDebug(msg) { const el = document.getElementById('syncDebug'); if (el) el.textContent = msg; }
 
-async function detectBranch() {
-    if (githubBranch) return githubBranch;
-    try {
-        const resp = await fetch(GITHUB_API_BASE, { headers: githubToken ? { 'Authorization': 'token ' + githubToken } : {} });
-        if (resp.ok) { const data = await resp.json(); githubBranch = data.default_branch || 'main'; return githubBranch; }
-    } catch (e) {}
-    githubBranch = 'main';
-    return githubBranch;
-}
-
-async function loadFromGitHub() {
-    try {
-        setSyncStatus('syncing');
-        const branch = await detectBranch();
-        setSyncDebug('Rama: ' + branch);
-        const rawUrl = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + branch + '/data.json';
-        setSyncDebug('Cargando: ' + rawUrl.substring(0, 50) + '...');
-        const resp = await fetch(rawUrl + '?t=' + Date.now());
-        setSyncDebug('HTTP ' + resp.status);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const text = await resp.text();
-        setSyncDebug('Bytes: ' + text.length);
-        const data = JSON.parse(text);
-        matches = data.matches || [];
-        players = data.players || [];
-        setSyncDebug('Partidos: ' + matches.length + ' | Jugadores: ' + players.length);
+function listenToCloud() {
+    setSyncStatus('syncing');
+    unsubscribe = db.doc('data/main').onSnapshot(doc => {
+        if (doc.exists) {
+            const d = doc.data();
+            matches = d.matches || [];
+            players = d.players || [];
+        } else {
+            matches = [];
+            players = [];
+        }
         localStorage.setItem('crew_matches', JSON.stringify(matches));
         localStorage.setItem('crew_players', JSON.stringify(players));
-        await fetchSha();
         setSyncStatus('synced');
-        setTimeout(() => setSyncDebug(''), 3000);
-    } catch (e) {
-        console.warn('GitHub load failed:', e);
+        setSyncDebug('Partidos: ' + matches.length + ' | Jugadores: ' + players.length);
+        render();
+    }, err => {
+        console.warn('Firestore listen error:', err);
         try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; }
-        setSyncDebug('Error: ' + e.message + ' | Local: ' + matches.length + 'p ' + players.length + 'j');
         setSyncStatus('local');
-    }
+        setSyncDebug('Sin conexion - modo local');
+        render();
+    });
 }
 
-async function fetchSha() {
-    if (!githubToken) return;
-    try {
-        const branch = await detectBranch();
-        const resp = await fetch(GITHUB_API + '?ref=' + branch, { headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' } });
-        if (resp.ok) { const data = await resp.json(); dataSha = data.sha; }
-        else if (resp.status === 404) { dataSha = null; }
-    } catch (e) { console.warn('SHA fetch failed:', e); }
-}
-
-async function saveToGitHub() {
+async function saveToCloud() {
     localStorage.setItem('crew_matches', JSON.stringify(matches));
     localStorage.setItem('crew_players', JSON.stringify(players));
-    if (!githubToken) { setSyncStatus('local'); return; }
     try {
         setSyncStatus('syncing');
-        const branch = await detectBranch();
-        if (!dataSha) await fetchSha();
-        const payload = JSON.stringify({ matches, players });
-        const b64 = btoa(unescape(encodeURIComponent(payload)));
-        const body = { message: 'Actualizado desde La Crew FC', content: b64, branch: branch };
-        if (dataSha) body.sha = dataSha;
-        const resp = await fetch(GITHUB_API, {
-            method: 'PUT',
-            headers: { 'Authorization': 'token ' + githubToken, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-            body: JSON.stringify(body)
-        });
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            console.error('GitHub API error:', resp.status, err);
-            setSyncStatus('error');
-            document.getElementById('syncStatus').textContent = 'Error: ' + (err.message || resp.status);
-            return;
-        }
-        const data = await resp.json();
-        dataSha = data.content && data.content.sha;
+        await db.doc('data/main').set({ matches, players });
         setSyncStatus('synced');
     } catch (e) {
-        console.error('GitHub save failed:', e);
+        console.error('Firestore save error:', e);
         setSyncStatus('error');
-        document.getElementById('syncStatus').textContent = 'Error: ' + e.message;
+        setSyncDebug('Error: ' + e.message);
     }
 }
-function saveMatches() { saveToGitHub(); }
-function savePlayers() { saveToGitHub(); }
+function saveMatches() { saveToCloud(); }
+function savePlayers() { saveToCloud(); }
 
-function openLoginModal() { document.getElementById('loginUser').value = ''; document.getElementById('loginPass').value = ''; document.getElementById('loginToken').value = githubToken || ''; document.getElementById('loginError').textContent = ''; document.getElementById('loginModal').classList.remove('hidden'); document.getElementById('loginUser').focus(); }
+function openLoginModal() { document.getElementById('loginUser').value = ''; document.getElementById('loginPass').value = ''; document.getElementById('loginError').textContent = ''; document.getElementById('loginModal').classList.remove('hidden'); document.getElementById('loginUser').focus(); }
 function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
 function doLogin() {
-    const u = document.getElementById('loginUser').value.trim(), p = document.getElementById('loginPass').value, t = document.getElementById('loginToken').value.trim();
+    const u = document.getElementById('loginUser').value.trim(), p = document.getElementById('loginPass').value;
     if (!u) { document.getElementById('loginError').textContent = 'Pone tu nombre.'; return; }
-    if (p === ADMIN_PASS) { isAdmin = true; if (t) { githubToken = t; localStorage.setItem('crew_gh_token', t); fetchSha(); } document.getElementById('btnLogin').classList.add('hidden'); document.getElementById('btnLogout').classList.remove('hidden'); document.getElementById('userBadge').classList.remove('hidden'); document.getElementById('userBadge').textContent = u + ' (Admin)'; document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden')); closeLoginModal(); render(); }
+    if (p === ADMIN_PASS) { isAdmin = true; document.getElementById('btnLogin').classList.add('hidden'); document.getElementById('btnLogout').classList.remove('hidden'); document.getElementById('userBadge').classList.remove('hidden'); document.getElementById('userBadge').textContent = u + ' (Admin)'; document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden')); closeLoginModal(); render(); }
     else { document.getElementById('loginError').textContent = 'Contrasena incorrecta.'; }
 }
 function doLogout() { isAdmin = false; document.getElementById('btnLogin').classList.remove('hidden'); document.getElementById('btnLogout').classList.add('hidden'); document.getElementById('userBadge').classList.add('hidden'); document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); render(); }
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
-document.getElementById('loginToken').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 function switchTab(tab) { document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', ['cronograma','plantel','estadisticas'][i] === tab)); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); if (tab === 'plantel') renderSquad(); if (tab === 'estadisticas') renderStatsTab(); }
 
