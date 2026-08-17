@@ -586,34 +586,42 @@ const db = firebase.firestore();
 let currentYear, currentMonth, matches = [], players = [], isAdmin = false;
 let deleteMatchTargetId = null, deletePlayerTargetId = null, badgeBase64 = null, playerPhotoBase64 = null;
 let selectedDay = null, selectedConv = [], statsPeriod = 'month';
-let unsubscribe = null;
+let unsubscribe = null, isLoadingCloud = false;
 
-function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); listenToCloud(); }
+function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); loadFromCloud(); }
 
 function setSyncStatus(status) { const el = document.getElementById('syncStatus'); if (status === 'syncing') { el.textContent = 'Sincronizando...'; el.className = 'sync-status syncing'; } else if (status === 'synced') { el.textContent = 'Sincronizado'; el.className = 'sync-status synced'; setTimeout(() => { el.textContent = ''; el.className = 'sync-status'; }, 2000); } else if (status === 'error') { el.textContent = 'Error de conexion'; el.className = 'sync-status error'; } else if (status === 'local') { el.textContent = 'Modo local'; el.className = 'sync-status'; } else { el.textContent = ''; el.className = 'sync-status'; } }
 function setSyncDebug(msg) { const el = document.getElementById('syncDebug'); if (el) el.textContent = msg; }
 
-function listenToCloud() {
-    setSyncStatus('syncing');
-    unsubscribe = db.doc('data/main').onSnapshot(doc => {
-        if (doc.exists) {
-            const d = doc.data();
-            matches = d.matches || [];
-            players = d.players || [];
-        } else {
-            matches = [];
-            players = [];
-        }
+async function loadFromCloud() {
+    try {
+        setSyncStatus('syncing');
+        const snap = await db.doc('data/main').get();
+        if (snap.exists) { const d = snap.data(); matches = d.matches || []; players = d.players || []; }
+        else { matches = []; players = []; }
         localStorage.setItem('crew_matches', JSON.stringify(matches));
         localStorage.setItem('crew_players', JSON.stringify(players));
         setSyncStatus('synced');
         setSyncDebug('Partidos: ' + matches.length + ' | Jugadores: ' + players.length);
         render();
-    }, err => {
-        console.warn('Firestore listen error:', err);
+        startListening();
+    } catch (e) {
+        console.warn('Firestore load error:', e);
         try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; }
         setSyncStatus('local');
         setSyncDebug('Sin conexion - modo local');
+        render();
+    }
+}
+
+function startListening() {
+    if (unsubscribe) unsubscribe();
+    unsubscribe = db.doc('data/main').onSnapshot(snap => {
+        if (isLoadingCloud) return;
+        if (snap.exists) { const d = snap.data(); matches = d.matches || []; players = d.players || []; }
+        else { matches = []; players = []; }
+        localStorage.setItem('crew_matches', JSON.stringify(matches));
+        localStorage.setItem('crew_players', JSON.stringify(players));
         render();
     });
 }
@@ -622,13 +630,16 @@ async function saveToCloud() {
     localStorage.setItem('crew_matches', JSON.stringify(matches));
     localStorage.setItem('crew_players', JSON.stringify(players));
     try {
+        isLoadingCloud = true;
         setSyncStatus('syncing');
         await db.doc('data/main').set({ matches, players });
         setSyncStatus('synced');
+        setTimeout(() => { isLoadingCloud = false; }, 1000);
     } catch (e) {
         console.error('Firestore save error:', e);
         setSyncStatus('error');
         setSyncDebug('Error: ' + e.message);
+        isLoadingCloud = false;
     }
 }
 function saveMatches() { saveToCloud(); }
