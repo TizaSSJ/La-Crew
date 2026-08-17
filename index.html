@@ -75,7 +75,7 @@
             position: relative; transition: all 0.25s; border-bottom: 2px solid transparent; letter-spacing: 0.3px;
         }
         .tab-btn:hover { color: var(--text); }
-        .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+        .tab-btn.active { color: #fff; border-bottom-color: var(--orange); }
         .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 50%; width: 0; height: 2px; background: var(--orange); transition: all 0.3s ease; transform: translateX(-50%); }
         .tab-btn.active::after { width: 100%; }
         .tab-content { display: none; } .tab-content.active { display: block; animation: fadeSlideUp 0.35s ease both; }
@@ -159,6 +159,8 @@
 
         /* ===== PLATEL ===== */
         .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+        .squad-grid:hover .player-card { opacity: 0.5; filter: brightness(0.7); }
+        .squad-grid:hover .player-card:hover { opacity: 1; filter: brightness(1) drop-shadow(0 8px 24px rgba(255,163,26,0.15)); transform: translateY(-6px) scale(1.02); }
         .player-card {
             position: relative; border-radius: 18px; overflow: hidden;
             aspect-ratio: 3 / 4; cursor: default; transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
@@ -331,21 +333,21 @@
             background: rgba(17,17,17,0.9); border: 1px solid rgba(255,163,26,0.15); border-radius: 24px;
             padding: 0; width: 92%; max-width: 380px; text-align: center;
             animation: modalIn 0.3s ease; box-shadow: 0 24px 80px rgba(0,0,0,0.6); overflow: hidden;
+            position: relative;
         }
-        .profile-hero {
-            position: relative; height: 240px; overflow: hidden;
+        .profile-photo-wrap {
+            position: relative; height: 220px; overflow: hidden;
             background: linear-gradient(160deg, var(--orange) 0%, var(--orange-dark) 35%, #1a0800 75%, #0a0500 100%);
+            display: flex; align-items: flex-end; justify-content: center;
         }
-        .profile-hero img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-hero-gradient {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
-            background: linear-gradient(to top, rgba(17,17,17,1) 0%, rgba(17,17,17,0.8) 30%, transparent 100%);
+        .profile-photo-wrap img { width: 100%; height: auto; min-height: 220px; object-fit: cover; object-position: top; position: absolute; bottom: 0; left: 0; right: 0; }
+        .profile-photo-gradient {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+            background: linear-gradient(to top, rgba(17,17,17,1) 0%, rgba(17,17,17,0.85) 30%, transparent 100%);
+            z-index: 1;
         }
-        .profile-number {
-            position: absolute; bottom: 12px; right: 18px; font-size: 3.5rem; font-weight: 900;
-            color: rgba(255,255,255,0.15); z-index: 1; line-height: 1;
-        }
-        .profile-body { padding: 20px 28px 28px; }
+        .profile-body { padding: 0 28px 28px; position: relative; z-index: 2; margin-top: -40px; }
+        .profile-number { font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; }
         .profile-name { font-size: 0.8rem; font-weight: 300; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
         .profile-surname { font-size: 1.6rem; font-weight: 900; color: var(--text); text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 16px; }
         .profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -563,11 +565,11 @@
 
 <div class="profile-overlay hidden" id="playerProfileModal" onclick="if(event.target===this)closePlayerProfile()">
     <div class="profile-box">
-        <div class="profile-hero" id="profileHero">
-            <div class="profile-hero-gradient"></div>
-            <span class="profile-number" id="profileNumber"></span>
+        <div class="profile-photo-wrap" id="profileHero">
+            <div class="profile-photo-gradient"></div>
         </div>
         <div class="profile-body">
+            <div class="profile-number" id="profileNumber"></div>
             <div class="profile-name" id="profileName"></div>
             <div class="profile-surname" id="profileSurname"></div>
             <div class="profile-stats" id="profileStats"></div>
@@ -586,7 +588,7 @@ const db = firebase.firestore();
 let currentYear, currentMonth, matches = [], players = [], isAdmin = false;
 let deleteMatchTargetId = null, deletePlayerTargetId = null, badgeBase64 = null, playerPhotoBase64 = null;
 let selectedDay = null, selectedConv = [], statsPeriod = 'month';
-let unsubscribe = null, isLoadingCloud = false;
+let isSaving = false;
 
 function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); loadFromCloud(); }
 
@@ -603,44 +605,29 @@ async function loadFromCloud() {
         localStorage.setItem('crew_players', JSON.stringify(players));
         setSyncStatus('synced');
         setSyncDebug('Partidos: ' + matches.length + ' | Jugadores: ' + players.length);
-        render();
-        startListening();
     } catch (e) {
         console.warn('Firestore load error:', e);
         try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; }
         setSyncStatus('local');
         setSyncDebug('Sin conexion - modo local');
-        render();
     }
-}
-
-function startListening() {
-    if (unsubscribe) unsubscribe();
-    unsubscribe = db.doc('data/main').onSnapshot(snap => {
-        if (isLoadingCloud) return;
-        if (snap.exists) { const d = snap.data(); matches = d.matches || []; players = d.players || []; }
-        else { matches = []; players = []; }
-        localStorage.setItem('crew_matches', JSON.stringify(matches));
-        localStorage.setItem('crew_players', JSON.stringify(players));
-        render();
-    });
+    render();
 }
 
 async function saveToCloud() {
     localStorage.setItem('crew_matches', JSON.stringify(matches));
     localStorage.setItem('crew_players', JSON.stringify(players));
+    isSaving = true;
     try {
-        isLoadingCloud = true;
         setSyncStatus('syncing');
         await db.doc('data/main').set({ matches, players });
         setSyncStatus('synced');
-        setTimeout(() => { isLoadingCloud = false; }, 1000);
     } catch (e) {
         console.error('Firestore save error:', e);
         setSyncStatus('error');
         setSyncDebug('Error: ' + e.message);
-        isLoadingCloud = false;
     }
+    isSaving = false;
 }
 function saveMatches() { saveToCloud(); }
 function savePlayers() { saveToCloud(); }
@@ -727,7 +714,7 @@ function renderConvocatoriaChips() { const grid = document.getElementById('convo
 function toggleConv(id) { const idx = selectedConv.indexOf(id); if (idx === -1) selectedConv.push(id); else selectedConv.splice(idx, 1); renderConvocatoriaChips(); }
 function getConvHtml(match) { if (!match.players || !match.players.length) return ''; const convPlayers = match.players.map(id => players.find(p => p.id === id)).filter(Boolean); if (!convPlayers.length) return ''; const avatars = convPlayers.slice(0, 6).map(p => p.photo ? `<img class="conv-avatar" src="${p.photo}" alt="${esc(p.name)}" title="${esc(p.name)} ${esc(p.surname || '')}">` : `<div class="conv-avatar-placeholder">${esc((p.surname || p.name || '').substring(0,1))}</div>`).join(''); const extra = convPlayers.length > 6 ? `<div class="conv-avatar-placeholder">+${convPlayers.length - 6}</div>` : ''; return `<div class="conv-avatars">${avatars}${extra}</div><div class="conv-count">${convPlayers.length} convocado${convPlayers.length !== 1 ? 's' : ''}</div>`; }
 function getMatchesPlayed(playerId) { return matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId)).length; }
-function openPlayerProfile(id) { const p = players.find(x => x.id === id); if (!p) return; const hero = document.getElementById('profileHero'); if (p.photo) { let img = hero.querySelector('img'); if (!img) { img = document.createElement('img'); hero.insertBefore(img, hero.firstChild); } img.src = p.photo; } else { const existing = hero.querySelector('img'); if (existing) existing.remove(); } document.getElementById('profileNumber').textContent = p.number != null ? p.number : ''; document.getElementById('profileName').textContent = p.name; document.getElementById('profileSurname').textContent = p.surname || ''; const played = getMatchesPlayed(p.id); document.getElementById('profileStats').innerHTML = `<div class="profile-stat"><div class="ps-value">${played}</div><div class="ps-label">Partidos Jugados</div></div><div class="profile-stat"><div class="ps-value">${p.number != null ? '#' + p.number : '-'}</div><div class="ps-label">Dorsal</div></div>`; document.getElementById('playerProfileModal').classList.remove('hidden'); }
+function openPlayerProfile(id) { const p = players.find(x => x.id === id); if (!p) return; const hero = document.getElementById('profileHero'); const existing = hero.querySelector('img'); if (existing) existing.remove(); if (p.photo) { const img = document.createElement('img'); img.src = p.photo; hero.insertBefore(img, hero.firstChild); } document.getElementById('profileNumber').textContent = p.number != null ? '#' + p.number : ''; document.getElementById('profileName').textContent = p.name; document.getElementById('profileSurname').textContent = p.surname || ''; const played = getMatchesPlayed(p.id); document.getElementById('profileStats').innerHTML = `<div class="profile-stat"><div class="ps-value">${played}</div><div class="ps-label">Partidos Jugados</div></div><div class="profile-stat"><div class="ps-value">${p.number != null ? '#' + p.number : '-'}</div><div class="ps-label">Dorsal</div></div>`; document.getElementById('playerProfileModal').classList.remove('hidden'); }
 function closePlayerProfile() { document.getElementById('playerProfileModal').classList.add('hidden'); }
 
 function renderSquad() { const grid = document.getElementById('squadGrid'); if (!players.length) { grid.innerHTML = `<div class="squad-empty"><div class="empty-icon">&#9917;</div><p>No hay jugadores en el plantel</p>${isAdmin ? '<p style="margin-top:8px;font-size:0.82rem;">Activa Admin y agrega uno</p>' : ''}</div>`; return; } const sorted = [...players].sort((a, b) => (a.number || 99) - (b.number || 99)); grid.innerHTML = sorted.map((p, i) => `<div class="player-card anim-scale stagger-${Math.min(i+1, 8)}" onclick="${isAdmin ? '' : `openPlayerProfile('${p.id}')`}" style="${isAdmin ? '' : 'cursor:pointer'}"><div class="player-card-bg"></div>${p.photo ? `<img class="player-card-photo" src="${p.photo}" alt="">` : ''}<div class="player-card-gradient"></div><span class="player-card-number">${p.number != null && p.number !== '' ? p.number : ''}</span><div class="player-card-text"><div class="player-card-name">${esc(p.name)}</div><div class="player-card-surname">${esc(p.surname || '')}</div></div>${isAdmin ? `<div class="player-card-actions-float"><button onclick="event.stopPropagation();editPlayer('${p.id}')">&#9998;</button><button class="del-btn" onclick="event.stopPropagation();deletePlayer('${p.id}')">&#10005;</button></div>` : ''}</div>`).join(''); }
