@@ -159,14 +159,12 @@
 
         /* ===== PLATEL ===== */
         .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-        .squad-grid:hover .player-card { opacity: 0.5; filter: brightness(0.7); }
-        .squad-grid:hover .player-card:hover { opacity: 1; filter: brightness(1) drop-shadow(0 8px 24px rgba(255,163,26,0.15)); transform: translateY(-6px) scale(1.02); }
+        .squad-grid:hover .player-card:hover { transform: translateY(-8px) scale(1.06); box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,163,26,0.3); z-index: 10; }
         .player-card {
             position: relative; border-radius: 18px; overflow: hidden;
             aspect-ratio: 3 / 4; cursor: default; transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
-        .player-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,163,26,0.25), 0 0 30px rgba(255,163,26,0.1); }
         .player-card-bg {
             position: absolute; inset: 0;
             background:
@@ -179,17 +177,17 @@
             z-index: 0;
         }
         .player-card:hover .player-card-bg { filter: brightness(1.1); }
-        .player-card-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        .player-card-photo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; z-index: 1; }
         .player-card-gradient {
             position: absolute; bottom: 0; left: 0; right: 0; height: 42%;
             background: linear-gradient(to top, rgba(255,163,26,1) 0%, rgba(255,163,26,0.85) 20%, rgba(255,163,26,0.45) 50%, transparent 100%);
             z-index: 2;
         }
         .player-card-number {
-            position: absolute; bottom: 14px; right: 18px; font-size: 4rem; font-weight: 900; line-height: 1;
+            position: absolute; bottom: 14px; left: 18px; font-size: 4rem; font-weight: 900; line-height: 1;
             color: #fff; z-index: 3; text-shadow: 0 2px 12px rgba(0,0,0,0.3);
         }
-        .player-card-text { position: absolute; bottom: 14px; left: 18px; text-align: left; z-index: 3; }
+        .player-card-text { position: absolute; bottom: 14px; right: 18px; text-align: right; z-index: 3; }
         .player-card-name { font-size: 0.78rem; font-weight: 300; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; }
         .player-card-surname { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1; text-transform: uppercase; letter-spacing: -0.5px; }
         .player-card-actions-float { position: absolute; top: 12px; right: 12px; display: flex; gap: 5px; z-index: 4; opacity: 0; transition: 0.2s; }
@@ -598,9 +596,13 @@ function setSyncDebug(msg) { const el = document.getElementById('syncDebug'); if
 async function loadFromCloud() {
     try {
         setSyncStatus('syncing');
-        const snap = await db.doc('data/main').get();
-        if (snap.exists) { const d = snap.data(); matches = d.matches || []; players = d.players || []; }
-        else { matches = []; players = []; }
+        const [playersSnap, matchesSnap] = await Promise.all([
+            db.collection('players').get(),
+            db.collection('matches').get()
+        ]);
+        players = []; matches = [];
+        playersSnap.forEach(doc => players.push({ id: doc.id, ...doc.data() }));
+        matchesSnap.forEach(doc => matches.push({ id: doc.id, ...doc.data() }));
         localStorage.setItem('crew_matches', JSON.stringify(matches));
         localStorage.setItem('crew_players', JSON.stringify(players));
         setSyncStatus('synced');
@@ -620,7 +622,18 @@ async function saveToCloud() {
     isSaving = true;
     try {
         setSyncStatus('syncing');
-        await db.doc('data/main').set({ matches, players });
+        const batch = db.batch();
+        const playersSnap = await db.collection('players').get();
+        playersSnap.forEach(doc => {
+            if (!players.find(p => p.id === doc.id)) batch.delete(doc.ref);
+        });
+        players.forEach(p => batch.set(db.collection('players').doc(p.id), { name: p.name, surname: p.surname, number: p.number, photo: p.photo || null }));
+        const matchesSnap = await db.collection('matches').get();
+        matchesSnap.forEach(doc => {
+            if (!matches.find(m => m.id === doc.id)) batch.delete(doc.ref);
+        });
+        matches.forEach(m => batch.set(db.collection('matches').doc(m.id), { date: m.date, opponent: m.opponent, goalsFor: m.goalsFor, goalsAgainst: m.goalsAgainst, location: m.location, notes: m.notes, status: m.status, badge: m.badge || null, players: m.players || [] }));
+        await batch.commit();
         setSyncStatus('synced');
     } catch (e) {
         console.error('Firestore save error:', e);
