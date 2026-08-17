@@ -591,9 +591,49 @@ function setSyncStatus(status) { const el = document.getElementById('syncStatus'
 
 async function loadFromGitHub() { try { setSyncStatus('syncing'); const resp = await fetch(GITHUB_RAW + '?t=' + Date.now()); if (!resp.ok) throw new Error('Not found'); const data = await resp.json(); matches = data.matches || []; players = data.players || []; localStorage.setItem('crew_matches', JSON.stringify(matches)); localStorage.setItem('crew_players', JSON.stringify(players)); await fetchSha(); setSyncStatus('synced'); } catch (e) { console.warn('GitHub load failed, using localStorage:', e); try { matches = JSON.parse(localStorage.getItem('crew_matches')) || []; players = JSON.parse(localStorage.getItem('crew_players')) || []; } catch { matches = []; players = []; } setSyncStatus('local'); } }
 
-async function fetchSha() { if (!githubToken) return; try { const resp = await fetch(GITHUB_API, { headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' } }); if (resp.ok) { const data = await resp.json(); dataSha = data.sha; } } catch (e) { console.warn('SHA fetch failed:', e); } }
+async function fetchSha() {
+    if (!githubToken) return;
+    try {
+        const resp = await fetch(GITHUB_API, { headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' } });
+        if (resp.ok) { const data = await resp.json(); dataSha = data.sha; }
+        else if (resp.status === 404) { dataSha = null; }
+        else { const err = await resp.json().catch(() => ({})); console.warn('SHA fetch error:', resp.status, err.message); }
+    } catch (e) { console.warn('SHA fetch failed:', e); }
+}
 
-async function saveToGitHub() { localStorage.setItem('crew_matches', JSON.stringify(matches)); localStorage.setItem('crew_players', JSON.stringify(players)); if (!githubToken) { setSyncStatus('local'); return; } try { setSyncStatus('syncing'); if (!dataSha) await fetchSha(); const payload = JSON.stringify({ matches, players }); const b64 = btoa(unescape(encodeURIComponent(payload))); const body = { message: 'Actualizado desde La Crew FC', content: b64 }; if (dataSha) body.sha = dataSha; const resp = await fetch(GITHUB_API, { method: 'PUT', headers: { 'Authorization': 'token ' + githubToken, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify(body) }); if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.message || resp.status); } const data = await resp.json(); dataSha = data.content && data.content.sha; setSyncStatus('synced'); } catch (e) { console.error('GitHub save failed:', e); setSyncStatus('error'); } }
+async function saveToGitHub() {
+    localStorage.setItem('crew_matches', JSON.stringify(matches));
+    localStorage.setItem('crew_players', JSON.stringify(players));
+    if (!githubToken) { setSyncStatus('local'); return; }
+    try {
+        setSyncStatus('syncing');
+        if (!dataSha) await fetchSha();
+        const payload = JSON.stringify({ matches, players });
+        const b64 = btoa(unescape(encodeURIComponent(payload)));
+        const body = { message: 'Actualizado desde La Crew FC', content: b64 };
+        if (dataSha) body.sha = dataSha;
+        const resp = await fetch(GITHUB_API, {
+            method: 'PUT',
+            headers: { 'Authorization': 'token ' + githubToken, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+            body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            const msg = err.message || ('HTTP ' + resp.status);
+            console.error('GitHub API error:', resp.status, err);
+            setSyncStatus('error');
+            document.getElementById('syncStatus').textContent = 'Error: ' + msg;
+            return;
+        }
+        const data = await resp.json();
+        dataSha = data.content && data.content.sha;
+        setSyncStatus('synced');
+    } catch (e) {
+        console.error('GitHub save failed:', e);
+        setSyncStatus('error');
+        document.getElementById('syncStatus').textContent = 'Error: ' + e.message;
+    }
+}
 function saveMatches() { saveToGitHub(); }
 function savePlayers() { saveToGitHub(); }
 
@@ -608,6 +648,7 @@ function doLogin() {
 function doLogout() { isAdmin = false; document.getElementById('btnLogin').classList.remove('hidden'); document.getElementById('btnLogout').classList.add('hidden'); document.getElementById('userBadge').classList.add('hidden'); document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); render(); }
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+document.getElementById('loginToken').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 function switchTab(tab) { document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', ['cronograma','plantel','estadisticas'][i] === tab)); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); if (tab === 'plantel') renderSquad(); if (tab === 'estadisticas') renderStatsTab(); }
 
