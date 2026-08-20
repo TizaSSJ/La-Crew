@@ -21,14 +21,13 @@
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
         .hidden { display: none !important; }
 
-        /* ===== ANIMATIONS ===== */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeSlideLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
         @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,163,26,0); } 50% { box-shadow: 0 0 18px 2px rgba(255,163,26,0.15); } }
-        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
         @keyframes countUp { from { opacity: 0; transform: translateY(10px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         .anim-fade { animation: fadeIn 0.4s ease both; }
         .anim-slide-up { animation: fadeSlideUp 0.4s ease both; }
         .anim-slide-left { animation: fadeSlideLeft 0.35s ease both; }
@@ -37,16 +36,16 @@
         .stagger-1 { animation-delay: 0.05s; } .stagger-2 { animation-delay: 0.1s; } .stagger-3 { animation-delay: 0.15s; } .stagger-4 { animation-delay: 0.2s; }
         .stagger-5 { animation-delay: 0.25s; } .stagger-6 { animation-delay: 0.3s; } .stagger-7 { animation-delay: 0.35s; } .stagger-8 { animation-delay: 0.4s; }
 
-        /* ===== HEADER ===== */
+        /* HEADER */
         header {
-            background: linear-gradient(180deg, #111 0%, #0d0d0d 100%);
+            background: linear-gradient(180deg, rgba(255,163,26,0.04) 0%, var(--surface) 100%);
             border-bottom: 1px solid var(--border);
             padding: 10px 28px; display: flex; justify-content: space-between; align-items: center;
         }
         .header-left { display: flex; align-items: center; }
         .header-logo { height: 54px; width: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(255,163,26,0.3)); animation: fadeSlideLeft 0.5s ease both; transition: filter 0.3s; }
         .header-logo:hover { filter: drop-shadow(0 0 20px rgba(255,163,26,0.5)); }
-        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
         .btn-login {
             background: linear-gradient(135deg, var(--orange), var(--orange-dark));
             border: none; color: #000; padding: 8px 20px; border-radius: 8px; cursor: pointer;
@@ -67,20 +66,18 @@
         }
         .btn-logout:hover { border-color: var(--red); color: var(--red); }
 
-        /* ===== TABS ===== */
-        .tabs-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 28px; gap: 4px; animation: fadeIn 0.3s ease both; animation-delay: 0.15s; }
+        /* TABS */
+        .tabs-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 28px; gap: 2px; animation: fadeIn 0.3s ease both; animation-delay: 0.15s; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .tab-btn {
             padding: 14px 22px; background: none; border: none; color: var(--text-dim);
             font-size: 0.85rem; font-weight: 600; font-family: inherit; cursor: pointer;
-            position: relative; transition: all 0.25s; border-bottom: 2px solid transparent; letter-spacing: 0.3px;
+            position: relative; transition: all 0.25s; border-bottom: 2px solid transparent; letter-spacing: 0.3px; white-space: nowrap;
         }
         .tab-btn:hover { color: var(--text); }
         .tab-btn.active { color: #fff; border-bottom-color: var(--orange); }
-        .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 50%; width: 0; height: 2px; background: var(--orange); transition: all 0.3s ease; transform: translateX(-50%); }
-        .tab-btn.active::after { width: 100%; }
         .tab-content { display: none; } .tab-content.active { display: block; animation: fadeSlideUp 0.35s ease both; }
 
-        /* ===== BUTTONS ===== */
+        /* BUTTONS */
         .btn {
             padding: 9px 18px; border: none; border-radius: 8px; font-size: 0.82rem;
             font-weight: 600; cursor: pointer; transition: all 0.2s;
@@ -94,13 +91,13 @@
         .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border-light); }
         .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
 
-        /* ===== CARD ===== */
+        /* CARD */
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; animation: fadeSlideUp 0.4s ease both; animation-delay: 0.1s; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .card-header h2 { font-size: 0.78rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1.5px; }
         .page-pad { padding: 24px; max-width: 1400px; margin: 0 auto; }
 
-        /* ===== CALENDAR ===== */
+        /* CALENDAR */
         .cal-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
         .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .cal-nav h3 { font-size: 1.15rem; font-weight: 800; min-width: 200px; text-align: center; letter-spacing: -0.3px; }
@@ -111,6 +108,7 @@
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
         .cal-nav-btns button:hover { background: var(--orange); border-color: var(--orange); color: #000; }
+        .cal-nav-btns button[style*="width:auto"] { width: auto !important; padding: 0 14px !important; font-size: 0.82rem !important; font-weight: 700; }
 
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
         .cal-day-header { text-align: center; font-size: 0.68rem; font-weight: 700; color: var(--orange); padding: 6px 0; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.7; }
@@ -139,7 +137,7 @@
         .day-match-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface); border-radius: 10px; margin-bottom: 8px; border-left: 3px solid var(--border); }
         .day-match-item.result-win { border-left-color: var(--green); } .day-match-item.result-draw { border-left-color: var(--orange); } .day-match-item.result-loss { border-left-color: var(--red); }
 
-        /* ===== MATCH LIST ===== */
+        /* MATCH LIST */
         .match-list { display: flex; flex-direction: column; gap: 6px; max-height: 440px; overflow-y: auto; }
         .match-list::-webkit-scrollbar { width: 3px; } .match-list::-webkit-scrollbar-track { background: transparent; } .match-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         .match-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--surface2); border-radius: 10px; border-left: 3px solid var(--border); transition: 0.15s; }
@@ -157,7 +155,7 @@
         .match-actions button:hover { color: var(--orange); background: var(--orange-dim); }
         .match-actions .delete-btn:hover { color: var(--red); background: var(--red-dim); }
 
-        /* ===== PLATEL ===== */
+        /* SQUAD */
         .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
         .squad-grid:hover .player-card:hover { transform: translateY(-8px) scale(1.06); box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,163,26,0.3); z-index: 10; }
         .player-card {
@@ -203,7 +201,7 @@
         .squad-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-dim); }
         .squad-empty .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.4; }
 
-        /* ===== STATS ===== */
+        /* STATS */
         .stats-period-bar { display: flex; gap: 6px; margin-bottom: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; animation: fadeSlideUp 0.3s ease both; }
         .stats-period-btn { padding: 8px 20px; border: none; border-radius: 8px; background: transparent; color: var(--text-dim); font-size: 0.8rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.25s; }
         .stats-period-btn:hover { color: var(--text); }
@@ -213,21 +211,10 @@
             background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
             padding: 26px 22px; text-align: center; position: relative; overflow: hidden; transition: all 0.3s ease;
         }
-        .hero-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            border-radius: 16px 16px 0 0;
-        }
-        .hero-card::after {
-            content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s;
-        }
-        .hero-card:hover::after { opacity: 1; }
+        .hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0; }
         .hero-card:hover { border-color: var(--border-light); transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
         .hero-win::before { background: var(--green); } .hero-draw::before { background: var(--orange); }
         .hero-loss::before { background: var(--red); } .hero-gf::before { background: linear-gradient(90deg, var(--orange), var(--orange-light)); }
-        .hero-win::after { background: radial-gradient(ellipse at center, rgba(34,197,94,0.06) 0%, transparent 70%); }
-        .hero-draw::after { background: radial-gradient(ellipse at center, rgba(255,163,26,0.06) 0%, transparent 70%); }
-        .hero-loss::after { background: radial-gradient(ellipse at center, rgba(255,68,68,0.06) 0%, transparent 70%); }
-        .hero-gf::after { background: radial-gradient(ellipse at center, rgba(255,163,26,0.06) 0%, transparent 70%); }
         .hero-card .hero-value { font-size: 2.8rem; font-weight: 900; line-height: 1; letter-spacing: -1px; }
         .hero-card .hero-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 10px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
         .hero-win .hero-value { color: var(--green); } .hero-draw .hero-value { color: var(--orange); }
@@ -255,7 +242,7 @@
         .history-item .h-opp { flex: 1; font-weight: 600; font-size: 0.85rem; }
         .history-item .h-score { font-weight: 800; font-size: 0.92rem; min-width: 55px; text-align: center; }
 
-        /* ===== MODALS ===== */
+        /* MODALS */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: flex; align-items: center; justify-content: center;
@@ -266,7 +253,6 @@
             padding: 30px; width: 92%; max-width: 480px; animation: modalIn 0.25s ease;
             max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         .modal h2 { font-size: 1.15rem; margin-bottom: 22px; font-weight: 800; color: var(--orange); letter-spacing: -0.3px; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
 
@@ -302,7 +288,7 @@
         .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; }
         .empty-state p { font-size: 0.85rem; }
 
-        /* ===== CONVOCATORIA ===== */
+        /* CONVOCATORIA */
         .convocatoria-grid { display: flex; flex-wrap: wrap; gap: 6px; max-height: 160px; overflow-y: auto; padding: 2px; }
         .convocatoria-grid::-webkit-scrollbar { width: 3px; } .convocatoria-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         .conv-chip {
@@ -321,40 +307,46 @@
         .conv-avatar-placeholder:first-child { margin-left: 0; }
         .conv-count { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
 
-        /* ===== PLAYER PROFILE ===== */
+        /* PLAYER PROFILE */
         .profile-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.3);
             display: flex; align-items: center; justify-content: center;
             z-index: 200; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
         }
         .profile-box {
-            background: rgba(17,17,17,0.9); border: 1px solid rgba(255,163,26,0.15); border-radius: 24px;
-            padding: 0; width: 92%; max-width: 380px; text-align: center;
-            animation: modalIn 0.3s ease; box-shadow: 0 24px 80px rgba(0,0,0,0.6); overflow: hidden;
-            position: relative;
+            background: rgba(17,17,17,0.92); border: 1px solid rgba(255,163,26,0.15); border-radius: 20px;
+            width: 92%; max-width: 520px; animation: modalIn 0.3s ease; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            overflow: hidden; display: flex; flex-direction: row; min-height: 300px;
         }
-        .profile-photo-wrap {
-            position: relative; height: 220px; overflow: hidden;
+        .profile-photo-side {
+            width: 200px; flex-shrink: 0; position: relative; overflow: hidden;
             background: linear-gradient(160deg, var(--orange) 0%, var(--orange-dark) 35%, #1a0800 75%, #0a0500 100%);
-            display: flex; align-items: flex-end; justify-content: center;
         }
-        .profile-photo-wrap img { width: 100%; height: auto; min-height: 220px; object-fit: cover; object-position: top; position: absolute; bottom: 0; left: 0; right: 0; }
-        .profile-photo-gradient {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
-            background: linear-gradient(to top, rgba(17,17,17,1) 0%, rgba(17,17,17,0.85) 30%, transparent 100%);
-            z-index: 1;
+        .profile-photo-side img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+        .profile-photo-side .profile-num-watermark {
+            position: absolute; bottom: 12px; left: 12px; font-size: 3rem; font-weight: 900;
+            color: rgba(255,255,255,0.15); line-height: 1;
         }
-        .profile-body { padding: 0 28px 28px; position: relative; z-index: 2; margin-top: -40px; }
-        .profile-number { font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; }
-        .profile-name { font-size: 0.8rem; font-weight: 300; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-        .profile-surname { font-size: 1.6rem; font-weight: 900; color: var(--text); text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 16px; }
-        .profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .profile-stat { background: var(--surface2); border-radius: 10px; padding: 12px; border: 1px solid var(--border); }
-        .profile-stat .ps-value { font-size: 1.4rem; font-weight: 900; color: var(--orange); }
-        .profile-stat .ps-label { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-        .profile-close { margin-top: 16px; width: 100%; }
+        .profile-data-side {
+            flex: 1; padding: 24px; display: flex; flex-direction: column; justify-content: center;
+            min-width: 0;
+        }
+        .profile-data-side .pd-dorsal { font-size: 0.8rem; font-weight: 700; color: var(--orange); margin-bottom: 2px; }
+        .profile-data-side .pd-name { font-size: 0.78rem; font-weight: 300; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .profile-data-side .pd-surname { font-size: 1.5rem; font-weight: 900; color: var(--text); text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 16px; }
+        .profile-data-side .pd-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .pd-info-item { background: var(--surface2); border-radius: 10px; padding: 10px 12px; border: 1px solid var(--border); }
+        .pd-info-item .pd-val { font-size: 1.1rem; font-weight: 900; color: var(--orange); }
+        .pd-info-item .pd-lbl { font-size: 0.62rem; color: var(--text-dim); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .profile-data-side .pd-top-title { font-size: 0.68rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .pd-top-teams { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+        .pd-top-team { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-dim); }
+        .pd-top-team .pd-rank { width: 20px; height: 20px; border-radius: 6px; background: var(--orange-dim); color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 800; flex-shrink: 0; }
+        .pd-top-team .pd-team-name { flex: 1; font-weight: 600; color: var(--text); }
+        .pd-top-team .pd-team-goals { font-weight: 800; color: var(--orange); font-size: 0.75rem; }
+        .profile-close { width: 100%; margin-top: 8px; }
 
-        /* ===== LOGIN ===== */
+        /* LOGIN */
         .login-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.3);
             display: flex; align-items: center; justify-content: center;
@@ -378,11 +370,51 @@
         .login-error { color: var(--red); font-size: 0.78rem; margin-bottom: 12px; min-height: 18px; }
         .login-box .btn { width: 100%; justify-content: center; padding: 12px; font-size: 0.88rem; border-radius: 10px; }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1000px) { .cal-layout { grid-template-columns: 1fr; } .stats-two-col { grid-template-columns: 1fr; } .stats-hero { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 900px) { .cal-day { min-height: 50px; font-size: 0.72rem; } .cal-day .day-match .cal-badge { width: 16px; height: 16px; } .cal-day .day-match .cal-vs { font-size: 0.48rem; } }
-        @media (max-width: 600px) { .squad-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .player-card-number { font-size: 2.8rem; } .player-card-surname { font-size: 1.3rem; } }
-        @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } .form-row .vs-label { text-align: center; padding: 0; } .tab-btn { padding: 12px 14px; font-size: 0.78rem; } .header-logo { height: 34px; } }
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .cal-layout { grid-template-columns: 1fr; }
+            .stats-two-col { grid-template-columns: 1fr; }
+            .stats-hero { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .cal-day { min-height: 50px; font-size: 0.72rem; }
+            .cal-day .day-match .cal-badge { width: 16px; height: 16px; }
+            .cal-day .day-match .cal-vs { font-size: 0.48rem; }
+        }
+        @media (max-width: 600px) {
+            .squad-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+            .player-card-number { font-size: 2.8rem; bottom: 10px; left: 12px; }
+            .player-card-surname { font-size: 1.3rem; }
+            .player-card-name { font-size: 0.68rem; }
+            .player-card-text { bottom: 10px; right: 12px; }
+            .page-pad { padding: 16px; }
+            .card { padding: 16px; border-radius: 14px; }
+            .cal-nav h3 { font-size: 1rem; min-width: 150px; }
+            .cal-day { min-height: 44px; padding: 3px 1px; }
+            .cal-day .day-num { font-size: 0.72rem; }
+            .stats-hero { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .hero-card { padding: 18px 14px; }
+            .hero-card .hero-value { font-size: 2rem; }
+            .profile-box { flex-direction: column; max-width: 340px; }
+            .profile-photo-side { width: 100%; height: 180px; }
+            .profile-data-side { padding: 18px; }
+            .profile-data-side .pd-surname { font-size: 1.3rem; }
+            .stats-period-bar { width: 100%; overflow-x: auto; }
+            .stats-period-btn { padding: 8px 14px; font-size: 0.72rem; white-space: nowrap; }
+        }
+        @media (max-width: 500px) {
+            header { padding: 8px 16px; }
+            .header-logo { height: 36px; }
+            .header-right { gap: 6px; }
+            .tabs-bar { padding: 0 12px; }
+            .tab-btn { padding: 12px 14px; font-size: 0.78rem; }
+            .btn-login { padding: 6px 14px; font-size: 0.72rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-row .vs-label { text-align: center; padding: 0; }
+            .modal { padding: 22px; border-radius: 16px; }
+            .cal-nav { flex-wrap: wrap; gap: 8px; justify-content: center; }
+            .cal-nav h3 { min-width: unset; }
+        }
     </style>
 </head>
 <body>
@@ -533,6 +565,11 @@
             <div class="form-group"><label>Dorsal</label><input type="number" id="playerNumber" min="0" max="99" placeholder="#"></div>
         </div>
         <div class="form-group"><label>Apellido</label><input type="text" id="playerSurname" placeholder="Apellido"></div>
+        <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="playerDob"></div>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group"><label>Goles</label><input type="number" id="playerGoals" min="0" max="999" placeholder="0"></div>
+            <div class="form-group"><label>MVPs</label><input type="number" id="playerMvps" min="0" max="999" placeholder="0"></div>
+        </div>
         <div class="modal-actions">
             <button class="btn btn-ghost" onclick="closePlayerModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="savePlayer()">Guardar</button>
@@ -563,14 +600,16 @@
 
 <div class="profile-overlay hidden" id="playerProfileModal" onclick="if(event.target===this)closePlayerProfile()">
     <div class="profile-box">
-        <div class="profile-photo-wrap" id="profileHero">
-            <div class="profile-photo-gradient"></div>
+        <div class="profile-photo-side" id="profilePhotoSide">
+            <span class="profile-num-watermark" id="profileNumWatermark"></span>
         </div>
-        <div class="profile-body">
-            <div class="profile-number" id="profileNumber"></div>
-            <div class="profile-name" id="profileName"></div>
-            <div class="profile-surname" id="profileSurname"></div>
-            <div class="profile-stats" id="profileStats"></div>
+        <div class="profile-data-side">
+            <div class="pd-dorsal" id="profileDorsal"></div>
+            <div class="pd-name" id="profileName"></div>
+            <div class="pd-surname" id="profileSurname"></div>
+            <div class="pd-info-grid" id="profileInfoGrid"></div>
+            <div class="pd-top-title">Top 3 Equipos Goleados</div>
+            <div class="pd-top-teams" id="profileTopTeams"></div>
             <button class="btn btn-ghost profile-close" onclick="closePlayerProfile()">Cerrar</button>
         </div>
     </div>
@@ -627,7 +666,7 @@ async function saveToCloud() {
         playersSnap.forEach(doc => {
             if (!players.find(p => p.id === doc.id)) batch.delete(doc.ref);
         });
-        players.forEach(p => batch.set(db.collection('players').doc(p.id), { name: p.name, surname: p.surname, number: p.number, photo: p.photo || null }));
+        players.forEach(p => batch.set(db.collection('players').doc(p.id), { name: p.name, surname: p.surname, number: p.number, photo: p.photo || null, dob: p.dob || null, goals: p.goals || 0, mvps: p.mvps || 0 }));
         const matchesSnap = await db.collection('matches').get();
         matchesSnap.forEach(doc => {
             if (!matches.find(m => m.id === doc.id)) batch.delete(doc.ref);
@@ -726,16 +765,68 @@ function confirmDeleteMatch() { if (!deleteMatchTargetId) return; matches = matc
 function renderConvocatoriaChips() { const grid = document.getElementById('convocatoriaGrid'); if (!players.length) { grid.innerHTML = '<span style="font-size:0.78rem;color:var(--text-dim);">No hay jugadores en el plantel</span>'; return; } const sorted = [...players].sort((a, b) => (a.number || 99) - (b.number || 99)); grid.innerHTML = sorted.map(p => `<div class="conv-chip ${selectedConv.includes(p.id) ? 'selected' : ''}" onclick="toggleConv('${p.id}')">${p.photo ? `<img class="conv-photo" src="${p.photo}" alt="">` : ''}<span class="conv-num">${p.number != null ? p.number : ''}</span>${esc(p.surname || p.name)}</div>`).join(''); }
 function toggleConv(id) { const idx = selectedConv.indexOf(id); if (idx === -1) selectedConv.push(id); else selectedConv.splice(idx, 1); renderConvocatoriaChips(); }
 function getConvHtml(match) { if (!match.players || !match.players.length) return ''; const convPlayers = match.players.map(id => players.find(p => p.id === id)).filter(Boolean); if (!convPlayers.length) return ''; const avatars = convPlayers.slice(0, 6).map(p => p.photo ? `<img class="conv-avatar" src="${p.photo}" alt="${esc(p.name)}" title="${esc(p.name)} ${esc(p.surname || '')}">` : `<div class="conv-avatar-placeholder">${esc((p.surname || p.name || '').substring(0,1))}</div>`).join(''); const extra = convPlayers.length > 6 ? `<div class="conv-avatar-placeholder">+${convPlayers.length - 6}</div>` : ''; return `<div class="conv-avatars">${avatars}${extra}</div><div class="conv-count">${convPlayers.length} convocado${convPlayers.length !== 1 ? 's' : ''}</div>`; }
+
 function getMatchesPlayed(playerId) { return matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId)).length; }
-function openPlayerProfile(id) { const p = players.find(x => x.id === id); if (!p) return; const hero = document.getElementById('profileHero'); const existing = hero.querySelector('img'); if (existing) existing.remove(); if (p.photo) { const img = document.createElement('img'); img.src = p.photo; hero.insertBefore(img, hero.firstChild); } document.getElementById('profileNumber').textContent = p.number != null ? '#' + p.number : ''; document.getElementById('profileName').textContent = p.name; document.getElementById('profileSurname').textContent = p.surname || ''; const played = getMatchesPlayed(p.id); document.getElementById('profileStats').innerHTML = `<div class="profile-stat"><div class="ps-value">${played}</div><div class="ps-label">Partidos Jugados</div></div><div class="profile-stat"><div class="ps-value">${p.number != null ? '#' + p.number : '-'}</div><div class="ps-label">Dorsal</div></div>`; document.getElementById('playerProfileModal').classList.remove('hidden'); }
+
+function getTopTeams(playerId) {
+    const teamGoals = {};
+    matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId) && m.goalsFor > 0).forEach(m => {
+        teamGoals[m.opponent] = (teamGoals[m.opponent] || 0) + m.goalsFor;
+    });
+    return Object.entries(teamGoals).sort((a, b) => b[1] - a[1]).slice(0, 3);
+}
+
+function openPlayerProfile(id) {
+    const p = players.find(x => x.id === id);
+    if (!p) return;
+    const photoSide = document.getElementById('profilePhotoSide');
+    const existing = photoSide.querySelector('img');
+    if (existing) existing.remove();
+    if (p.photo) {
+        const img = document.createElement('img');
+        img.src = p.photo;
+        photoSide.insertBefore(img, photoSide.firstChild);
+    }
+    document.getElementById('profileNumWatermark').textContent = p.number != null ? '#' + p.number : '';
+    document.getElementById('profileDorsal').textContent = p.number != null ? 'Dorsal #' + p.number : '';
+    document.getElementById('profileName').textContent = p.name;
+    document.getElementById('profileSurname').textContent = p.surname || '';
+
+    const played = getMatchesPlayed(p.id);
+    const dobDisplay = p.dob ? formatDateShort(p.dob) : '-';
+    const goals = p.goals || 0;
+    const mvps = p.mvps || 0;
+    document.getElementById('profileInfoGrid').innerHTML = `
+        <div class="pd-info-item"><div class="pd-val">${played}</div><div class="pd-lbl">Partidos</div></div>
+        <div class="pd-info-item"><div class="pd-val">${goals}</div><div class="pd-lbl">Goles</div></div>
+        <div class="pd-info-item"><div class="pd-val">${mvps}</div><div class="pd-lbl">MVPs</div></div>
+        <div class="pd-info-item"><div class="pd-val">${dobDisplay}</div><div class="pd-lbl">Nacimiento</div></div>`;
+
+    const topTeams = getTopTeams(p.id);
+    const topEl = document.getElementById('profileTopTeams');
+    if (topTeams.length) {
+        topEl.innerHTML = topTeams.map((t, i) => `<div class="pd-top-team"><span class="pd-rank">${i + 1}</span><span class="pd-team-name">${esc(t[0])}</span><span class="pd-team-goals">${t[1]} goles</span></div>`).join('');
+    } else {
+        topEl.innerHTML = '<div style="font-size:0.75rem;color:var(--text-dim);">Sin datos aun</div>';
+    }
+
+    document.getElementById('playerProfileModal').classList.remove('hidden');
+}
 function closePlayerProfile() { document.getElementById('playerProfileModal').classList.add('hidden'); }
 
+function formatDateShort(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.getDate() + ' ' + MONTHS_ES[d.getMonth()].substring(0, 3) + ' ' + d.getFullYear();
+}
+
 function renderSquad() { const grid = document.getElementById('squadGrid'); if (!players.length) { grid.innerHTML = `<div class="squad-empty"><div class="empty-icon">&#9917;</div><p>No hay jugadores en el plantel</p>${isAdmin ? '<p style="margin-top:8px;font-size:0.82rem;">Activa Admin y agrega uno</p>' : ''}</div>`; return; } const sorted = [...players].sort((a, b) => (a.number || 99) - (b.number || 99)); grid.innerHTML = sorted.map((p, i) => `<div class="player-card anim-scale stagger-${Math.min(i+1, 8)}" onclick="${isAdmin ? '' : `openPlayerProfile('${p.id}')`}" style="${isAdmin ? '' : 'cursor:pointer'}"><div class="player-card-bg"></div>${p.photo ? `<img class="player-card-photo" src="${p.photo}" alt="">` : ''}<div class="player-card-gradient"></div><span class="player-card-number">${p.number != null && p.number !== '' ? p.number : ''}</span><div class="player-card-text"><div class="player-card-name">${esc(p.name)}</div><div class="player-card-surname">${esc(p.surname || '')}</div></div>${isAdmin ? `<div class="player-card-actions-float"><button onclick="event.stopPropagation();editPlayer('${p.id}')">&#9998;</button><button class="del-btn" onclick="event.stopPropagation();deletePlayer('${p.id}')">&#10005;</button></div>` : ''}</div>`).join(''); }
-function openPlayerModal() { document.getElementById('editPlayerId').value = ''; document.getElementById('playerModalTitle').textContent = 'Nuevo Jugador'; document.getElementById('playerName').value = ''; document.getElementById('playerSurname').value = ''; document.getElementById('playerNumber').value = ''; playerPhotoBase64 = null; document.getElementById('playerPhotoImg').classList.add('hidden'); document.getElementById('playerPhotoPlaceholder').classList.remove('hidden'); document.getElementById('playerPhotoInput').value = ''; document.getElementById('playerModal').classList.remove('hidden'); }
-function editPlayer(id) { const p = players.find(x => x.id === id); if (!p) return; document.getElementById('editPlayerId').value = p.id; document.getElementById('playerModalTitle').textContent = 'Editar Jugador'; document.getElementById('playerName').value = p.name; document.getElementById('playerSurname').value = p.surname; document.getElementById('playerNumber').value = p.number ?? ''; playerPhotoBase64 = p.photo || null; if (playerPhotoBase64) { document.getElementById('playerPhotoImg').src = playerPhotoBase64; document.getElementById('playerPhotoImg').classList.remove('hidden'); document.getElementById('playerPhotoPlaceholder').classList.add('hidden'); } else { document.getElementById('playerPhotoImg').classList.add('hidden'); document.getElementById('playerPhotoPlaceholder').classList.remove('hidden'); } document.getElementById('playerPhotoInput').value = ''; document.getElementById('playerModal').classList.remove('hidden'); }
+
+function openPlayerModal() { document.getElementById('editPlayerId').value = ''; document.getElementById('playerModalTitle').textContent = 'Nuevo Jugador'; document.getElementById('playerName').value = ''; document.getElementById('playerSurname').value = ''; document.getElementById('playerNumber').value = ''; document.getElementById('playerDob').value = ''; document.getElementById('playerGoals').value = ''; document.getElementById('playerMvps').value = ''; playerPhotoBase64 = null; document.getElementById('playerPhotoImg').classList.add('hidden'); document.getElementById('playerPhotoPlaceholder').classList.remove('hidden'); document.getElementById('playerPhotoInput').value = ''; document.getElementById('playerModal').classList.remove('hidden'); }
+function editPlayer(id) { const p = players.find(x => x.id === id); if (!p) return; document.getElementById('editPlayerId').value = p.id; document.getElementById('playerModalTitle').textContent = 'Editar Jugador'; document.getElementById('playerName').value = p.name; document.getElementById('playerSurname').value = p.surname || ''; document.getElementById('playerNumber').value = p.number ?? ''; document.getElementById('playerDob').value = p.dob || ''; document.getElementById('playerGoals').value = p.goals || ''; document.getElementById('playerMvps').value = p.mvps || ''; playerPhotoBase64 = p.photo || null; if (playerPhotoBase64) { document.getElementById('playerPhotoImg').src = playerPhotoBase64; document.getElementById('playerPhotoImg').classList.remove('hidden'); document.getElementById('playerPhotoPlaceholder').classList.add('hidden'); } else { document.getElementById('playerPhotoImg').classList.add('hidden'); document.getElementById('playerPhotoPlaceholder').classList.remove('hidden'); } document.getElementById('playerPhotoInput').value = ''; document.getElementById('playerModal').classList.remove('hidden'); }
 function closePlayerModal() { document.getElementById('playerModal').classList.add('hidden'); }
 function handlePlayerPhoto(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 600; let w = img.width, h = img.height; if (w > h) { if (w > max) { h = h * max / w; w = max; } } else { if (h > max) { w = w * max / h; h = max; } } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); playerPhotoBase64 = canvas.toDataURL('image/png'); document.getElementById('playerPhotoImg').src = playerPhotoBase64; document.getElementById('playerPhotoImg').classList.remove('hidden'); document.getElementById('playerPhotoPlaceholder').classList.add('hidden'); }; img.src = ev.target.result; }; r.readAsDataURL(f); }
-function savePlayer() { const id = document.getElementById('editPlayerId').value, name = document.getElementById('playerName').value.trim(), surname = document.getElementById('playerSurname').value.trim(), number = document.getElementById('playerNumber').value; if (!name) { alert('Pone el nombre del jugador.'); return; } const data = { name, surname, number: number !== '' ? parseInt(number) : null, photo: playerPhotoBase64 || null }; if (id) { const idx = players.findIndex(p => p.id === id); if (idx !== -1) players[idx] = { ...players[idx], ...data }; } else { players.push({ id: crypto.randomUUID(), ...data }); } savePlayers(); closePlayerModal(); renderSquad(); }
+function savePlayer() { const id = document.getElementById('editPlayerId').value, name = document.getElementById('playerName').value.trim(), surname = document.getElementById('playerSurname').value.trim(), number = document.getElementById('playerNumber').value, dob = document.getElementById('playerDob').value, goals = document.getElementById('playerGoals').value, mvps = document.getElementById('playerMvps').value; if (!name) { alert('Pone el nombre del jugador.'); return; } const data = { name, surname, number: number !== '' ? parseInt(number) : null, photo: playerPhotoBase64 || null, dob: dob || null, goals: goals !== '' ? parseInt(goals) : 0, mvps: mvps !== '' ? parseInt(mvps) : 0 }; if (id) { const idx = players.findIndex(p => p.id === id); if (idx !== -1) players[idx] = { ...players[idx], ...data }; } else { players.push({ id: crypto.randomUUID(), ...data }); } savePlayers(); closePlayerModal(); renderSquad(); }
 function deletePlayer(id) { deletePlayerTargetId = id; document.getElementById('deletePlayerModal').classList.remove('hidden'); }
 function closeDeletePlayerModal() { deletePlayerTargetId = null; document.getElementById('deletePlayerModal').classList.add('hidden'); }
 function confirmDeletePlayer() { if (!deletePlayerTargetId) return; players = players.filter(p => p.id !== deletePlayerTargetId); savePlayers(); closeDeletePlayerModal(); renderSquad(); }
