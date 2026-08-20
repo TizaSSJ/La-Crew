@@ -307,6 +307,59 @@
         .conv-avatar-placeholder:first-child { margin-left: 0; }
         .conv-count { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
 
+        /* MATCH RESULT POPUP */
+        .result-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        }
+        .result-box {
+            background: rgba(17,17,17,0.92); border: 1px solid rgba(255,163,26,0.15); border-radius: 20px;
+            width: 92%; max-width: 420px; animation: modalIn 0.3s ease; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+        .result-header {
+            padding: 24px 24px 16px; text-align: center; position: relative;
+            background: linear-gradient(160deg, rgba(255,163,26,0.08) 0%, transparent 60%);
+        }
+        .result-header .result-date { font-size: 0.72rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .result-teams { display: flex; align-items: center; justify-content: center; gap: 16px; }
+        .result-crew-badge { width: 56px; height: 56px; border-radius: 12px; object-fit: contain; border: 2px solid var(--orange); background: var(--surface2); }
+        .result-crew-placeholder { width: 56px; height: 56px; border-radius: 12px; border: 2px solid var(--orange); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .result-vs { font-size: 0.75rem; font-weight: 800; color: var(--text-dim); }
+        .result-score { font-size: 2.4rem; font-weight: 900; color: var(--text); letter-spacing: -1px; }
+        .result-score span { color: var(--orange); }
+        .result-rival-badge { width: 56px; height: 56px; border-radius: 12px; object-fit: contain; border: 2px solid var(--border); background: var(--surface2); }
+        .result-rival-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-top: 8px; }
+        .result-tag { display: inline-block; margin-top: 8px; font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .result-body { padding: 0 24px 20px; }
+        .result-section-title { font-size: 0.68rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
+        .result-players { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .result-player-chip {
+            display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px;
+            background: var(--surface2); border: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim);
+        }
+        .result-player-chip.is-mvp { border-color: var(--orange); background: var(--orange-dim); color: var(--orange); }
+        .result-player-chip .rp-photo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+        .result-player-chip .rp-num { font-weight: 800; color: var(--orange); min-width: 14px; }
+        .result-player-chip .rp-name { font-weight: 600; }
+        .result-player-chip .rp-goals { font-size: 0.68rem; color: var(--orange); font-weight: 800; margin-left: 2px; }
+        .result-mvp-section { background: var(--orange-dim); border: 1px solid rgba(255,163,26,0.2); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .result-mvp-section .mvp-label { font-size: 0.68rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
+        .result-mvp-section .mvp-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); }
+        .result-mvp-section .mvp-name { font-size: 0.9rem; font-weight: 800; color: var(--text); }
+        .result-close { width: 100%; }
+
+        /* MATCH FORM: player goals */
+        .conv-chip-row { display: flex; align-items: center; gap: 6px; }
+        .conv-chip { flex: 1; }
+        .conv-goals-input {
+            width: 44px; padding: 4px 6px; text-align: center; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 6px; color: var(--orange);
+            font-size: 0.82rem; font-weight: 700; font-family: inherit; outline: none; transition: 0.2s;
+        }
+        .conv-goals-input:focus { border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange-glow); }
+
         /* PLAYER PROFILE */
         .profile-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.3);
@@ -615,6 +668,14 @@
     </div>
 </div>
 
+<div class="result-overlay hidden" id="matchResultModal" onclick="if(event.target===this)closeMatchResult()">
+    <div class="result-box">
+        <div class="result-header" id="resultHeader"></div>
+        <div class="result-body" id="resultBody"></div>
+        <div style="padding: 0 24px 20px;"><button class="btn btn-ghost result-close" onclick="closeMatchResult()">Cerrar</button></div>
+    </div>
+</div>
+
 <script>
 const DAYS_ES = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -624,7 +685,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 let currentYear, currentMonth, matches = [], players = [], isAdmin = false;
 let deleteMatchTargetId = null, deletePlayerTargetId = null, badgeBase64 = null, playerPhotoBase64 = null;
-let selectedDay = null, selectedConv = [], statsPeriod = 'month';
+let selectedDay = null, selectedConv = [], selectedConvPlayerGoals = {}, selectedMvp = '', statsPeriod = 'month';
 let isSaving = false;
 
 function init() { const t = new Date(); currentYear = t.getFullYear(); currentMonth = t.getMonth(); loadFromCloud(); }
@@ -671,7 +732,7 @@ async function saveToCloud() {
         matchesSnap.forEach(doc => {
             if (!matches.find(m => m.id === doc.id)) batch.delete(doc.ref);
         });
-        matches.forEach(m => batch.set(db.collection('matches').doc(m.id), { date: m.date, opponent: m.opponent, goalsFor: m.goalsFor, goalsAgainst: m.goalsAgainst, location: m.location, notes: m.notes, status: m.status, badge: m.badge || null, players: m.players || [] }));
+        matches.forEach(m => batch.set(db.collection('matches').doc(m.id), { date: m.date, opponent: m.opponent, goalsFor: m.goalsFor, goalsAgainst: m.goalsAgainst, location: m.location, notes: m.notes, status: m.status, badge: m.badge || null, players: m.players || [], playerGoals: m.playerGoals || {}, mvp: m.mvp || null }));
         await batch.commit();
         setSyncStatus('synced');
     } catch (e) {
@@ -695,6 +756,7 @@ function doLogin() {
 function doLogout() { isAdmin = false; document.getElementById('btnLogin').classList.remove('hidden'); document.getElementById('btnLogout').classList.add('hidden'); document.getElementById('userBadge').classList.add('hidden'); document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); render(); }
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+document.getElementById('matchStatus').addEventListener('change', () => { renderConvocatoriaChips(); });
 
 function switchTab(tab) { document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', ['cronograma','plantel','estadisticas'][i] === tab)); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); if (tab === 'plantel') renderSquad(); if (tab === 'estadisticas') renderStatsTab(); }
 
@@ -735,12 +797,12 @@ function showDayDetail(y, m, d) {
     document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
     document.querySelectorAll('.cal-day').forEach(el => {
         const onclick = el.getAttribute('onclick');
-        if (onclick && onclick.includes(`${y},${m},${d}`)) el.classList.add('selected');
+        if (onclick && onclick.match(new RegExp(`showDayDetail\\(${y},${m},${d}\\)`))) el.classList.add('selected');
     });
     const dayM = getMatchesForDate(y, m, d), c = document.getElementById('dayDetail');
     if (!dayM.length) { c.innerHTML = `<div class="day-detail anim-slide-up"><h4>${d} de ${MONTHS_ES[m]} ${y}</h4><p style="color:var(--text-dim);font-size:0.85rem;">Sin partidos</p>${isAdmin ? `<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="openMatchModal('${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}')">+ Agregar</button>` : ''}</div>`; return; }
     let html = `<div class="day-detail anim-slide-up"><h4>${d} de ${MONTHS_ES[m]} ${y}</h4>`;
-    dayM.forEach(mt => { const r = getResult(mt); html += `<div class="day-match-item ${r.cls} anim-slide-up stagger-1"><div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;">${mt.badge ? `<img src="${mt.badge}" style="width:36px;height:36px;border-radius:6px;object-fit:contain;border:1px solid var(--border);flex-shrink:0;background:var(--surface2);" alt="">` : ''}<div style="min-width:0;"><div style="font-weight:700;font-size:0.9rem;">vs ${esc(mt.opponent)}</div><div style="font-size:0.73rem;color:var(--text-dim);display:flex;gap:8px;flex-wrap:wrap;">${mt.status === 'played' ? `<span class="match-result-tag ${r.tagCls}">${r.label}</span>` : `<span>${mt.status === 'pending' ? 'Programado' : 'Cancelado'}</span>`}${mt.location ? `<span>${esc(mt.location)}</span>` : ''}</div>${getConvHtml(mt)}${mt.notes ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">${esc(mt.notes)}</div>` : ''}</div></div><div class="match-score">${mt.status === 'played' ? `<div class="score-text">${mt.goalsFor} - ${mt.goalsAgainst}</div>` : ''}</div>${isAdmin ? `<div class="match-actions"><button onclick="editMatch('${mt.id}')">&#9998;</button><button class="delete-btn" onclick="deleteMatch('${mt.id}')">&#10005;</button></div>` : ''}</div>`; });
+    dayM.forEach(mt => { const r = getResult(mt); html += `<div class="day-match-item ${r.cls} anim-slide-up stagger-1" ${mt.status === 'played' ? `style="cursor:pointer;" onclick="openMatchResult('${mt.id}')"` : ''}><div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;">${mt.badge ? `<img src="${mt.badge}" style="width:36px;height:36px;border-radius:6px;object-fit:contain;border:1px solid var(--border);flex-shrink:0;background:var(--surface2);" alt="">` : ''}<div style="min-width:0;"><div style="font-weight:700;font-size:0.9rem;">vs ${esc(mt.opponent)}</div><div style="font-size:0.73rem;color:var(--text-dim);display:flex;gap:8px;flex-wrap:wrap;">${mt.status === 'played' ? `<span class="match-result-tag ${r.tagCls}">${r.label}</span>` : `<span>${mt.status === 'pending' ? 'Programado' : 'Cancelado'}</span>`}${mt.location ? `<span>${esc(mt.location)}</span>` : ''}</div>${getConvHtml(mt)}${mt.notes ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">${esc(mt.notes)}</div>` : ''}</div></div><div class="match-score">${mt.status === 'played' ? `<div class="score-text">${mt.goalsFor} - ${mt.goalsAgainst}</div>` : ''}</div>${isAdmin ? `<div class="match-actions"><button onclick="event.stopPropagation();editMatch('${mt.id}')">&#9998;</button><button class="delete-btn" onclick="event.stopPropagation();deleteMatch('${mt.id}')">&#10005;</button></div>` : ''}</div>`; });
     if (isAdmin) html += `<button class="btn btn-primary btn-sm" style="margin-top:4px;" onclick="openMatchModal('${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}')">+ Agregar</button>`;
     html += '</div>'; c.innerHTML = html;
 }
@@ -754,24 +816,26 @@ function renderMatchList() {
 }
 
 function handleBadgeUpload(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 150; let w = img.width, h = img.height; if (w > h) { if (w > max) { h = h * max / w; w = max; } } else { if (h > max) { w = w * max / h; h = max; } } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); badgeBase64 = canvas.toDataURL('image/jpeg', 0.7); document.getElementById('badgeImg').src = badgeBase64; document.getElementById('badgeImg').classList.remove('hidden'); document.getElementById('badgePlaceholder').classList.add('hidden'); }; img.src = ev.target.result; }; r.readAsDataURL(f); }
-function openMatchModal(dateStr) { document.getElementById('editMatchId').value = ''; document.getElementById('matchModalTitle').textContent = 'Nuevo Partido'; document.getElementById('matchDate').value = dateStr || new Date().toISOString().split('T')[0]; ['matchOpponent','matchGoalsFor','matchGoalsAgainst','matchLocation','matchNotes'].forEach(id => document.getElementById(id).value = ''); document.getElementById('matchStatus').value = 'pending'; badgeBase64 = null; document.getElementById('badgeImg').classList.add('hidden'); document.getElementById('badgePlaceholder').classList.remove('hidden'); document.getElementById('badgeInput').value = ''; selectedConv = []; renderConvocatoriaChips(); document.getElementById('matchModal').classList.remove('hidden'); }
-function editMatch(id) { const m = matches.find(x => x.id === id); if (!m) return; document.getElementById('editMatchId').value = m.id; document.getElementById('matchModalTitle').textContent = 'Editar Partido'; document.getElementById('matchDate').value = m.date; document.getElementById('matchOpponent').value = m.opponent; document.getElementById('matchGoalsFor').value = m.goalsFor ?? ''; document.getElementById('matchGoalsAgainst').value = m.goalsAgainst ?? ''; document.getElementById('matchLocation').value = m.location || ''; document.getElementById('matchNotes').value = m.notes || ''; document.getElementById('matchStatus').value = m.status; badgeBase64 = m.badge || null; if (badgeBase64) { document.getElementById('badgeImg').src = badgeBase64; document.getElementById('badgeImg').classList.remove('hidden'); document.getElementById('badgePlaceholder').classList.add('hidden'); } else { document.getElementById('badgeImg').classList.add('hidden'); document.getElementById('badgePlaceholder').classList.remove('hidden'); } document.getElementById('badgeInput').value = ''; selectedConv = m.players ? [...m.players] : []; renderConvocatoriaChips(); document.getElementById('matchModal').classList.remove('hidden'); }
+function openMatchModal(dateStr) { document.getElementById('editMatchId').value = ''; document.getElementById('matchModalTitle').textContent = 'Nuevo Partido'; document.getElementById('matchDate').value = dateStr || new Date().toISOString().split('T')[0]; ['matchOpponent','matchGoalsFor','matchGoalsAgainst','matchLocation','matchNotes'].forEach(id => document.getElementById(id).value = ''); document.getElementById('matchStatus').value = 'pending'; badgeBase64 = null; document.getElementById('badgeImg').classList.add('hidden'); document.getElementById('badgePlaceholder').classList.remove('hidden'); document.getElementById('badgeInput').value = ''; selectedConv = []; selectedConvPlayerGoals = {}; selectedMvp = ''; renderConvocatoriaChips(); document.getElementById('matchModal').classList.remove('hidden'); }
+function editMatch(id) { const m = matches.find(x => x.id === id); if (!m) return; document.getElementById('editMatchId').value = m.id; document.getElementById('matchModalTitle').textContent = 'Editar Partido'; document.getElementById('matchDate').value = m.date; document.getElementById('matchOpponent').value = m.opponent; document.getElementById('matchGoalsFor').value = m.goalsFor ?? ''; document.getElementById('matchGoalsAgainst').value = m.goalsAgainst ?? ''; document.getElementById('matchLocation').value = m.location || ''; document.getElementById('matchNotes').value = m.notes || ''; document.getElementById('matchStatus').value = m.status; badgeBase64 = m.badge || null; if (badgeBase64) { document.getElementById('badgeImg').src = badgeBase64; document.getElementById('badgeImg').classList.remove('hidden'); document.getElementById('badgePlaceholder').classList.add('hidden'); } else { document.getElementById('badgeImg').classList.add('hidden'); document.getElementById('badgePlaceholder').classList.remove('hidden'); } document.getElementById('badgeInput').value = ''; selectedConv = m.players ? [...m.players] : []; selectedConvPlayerGoals = m.playerGoals ? {...m.playerGoals} : {}; selectedMvp = m.mvp || ''; renderConvocatoriaChips(); document.getElementById('matchModal').classList.remove('hidden'); }
 function closeMatchModal() { document.getElementById('matchModal').classList.add('hidden'); }
-function saveMatch() { const id = document.getElementById('editMatchId').value, date = document.getElementById('matchDate').value, opponent = document.getElementById('matchOpponent').value.trim(), goalsFor = document.getElementById('matchGoalsFor').value, goalsAgainst = document.getElementById('matchGoalsAgainst').value, location = document.getElementById('matchLocation').value.trim(), notes = document.getElementById('matchNotes').value.trim(), status = document.getElementById('matchStatus').value; if (!date || !opponent) { alert('Completa la fecha y el rival.'); return; } const data = { date, opponent, goalsFor: goalsFor !== '' ? parseInt(goalsFor) : null, goalsAgainst: goalsAgainst !== '' ? parseInt(goalsAgainst) : null, location, notes, status, badge: badgeBase64 || null, players: selectedConv }; if (status === 'played' && (data.goalsFor === null || data.goalsAgainst === null)) { alert('Si el partido fue jugado, ingresa el resultado.'); return; } if (id) { const idx = matches.findIndex(m => m.id === id); if (idx !== -1) matches[idx] = { ...matches[idx], ...data }; } else { matches.push({ id: crypto.randomUUID(), ...data }); } saveMatches(); closeMatchModal(); render(); if (status === 'played') switchTab('estadisticas'); }
+function saveMatch() { const id = document.getElementById('editMatchId').value, date = document.getElementById('matchDate').value, opponent = document.getElementById('matchOpponent').value.trim(), goalsFor = document.getElementById('matchGoalsFor').value, goalsAgainst = document.getElementById('matchGoalsAgainst').value, location = document.getElementById('matchLocation').value.trim(), notes = document.getElementById('matchNotes').value.trim(), status = document.getElementById('matchStatus').value; if (!date || !opponent) { alert('Completa la fecha y el rival.'); return; } const mvpEl = document.getElementById('mvpSelect'); const mvpVal = mvpEl ? mvpEl.value : selectedMvp; const data = { date, opponent, goalsFor: goalsFor !== '' ? parseInt(goalsFor) : null, goalsAgainst: goalsAgainst !== '' ? parseInt(goalsAgainst) : null, location, notes, status, badge: badgeBase64 || null, players: selectedConv, playerGoals: {...selectedConvPlayerGoals}, mvp: mvpVal || null }; if (status === 'played' && (data.goalsFor === null || data.goalsAgainst === null)) { alert('Si el partido fue jugado, ingresa el resultado.'); return; } if (id) { const idx = matches.findIndex(m => m.id === id); if (idx !== -1) matches[idx] = { ...matches[idx], ...data }; } else { matches.push({ id: crypto.randomUUID(), ...data }); } saveMatches(); closeMatchModal(); render(); if (status === 'played') switchTab('estadisticas'); }
 function deleteMatch(id) { deleteMatchTargetId = id; document.getElementById('deleteModal').classList.remove('hidden'); }
 function closeDeleteModal() { deleteMatchTargetId = null; document.getElementById('deleteModal').classList.add('hidden'); }
 function confirmDeleteMatch() { if (!deleteMatchTargetId) return; matches = matches.filter(m => m.id !== deleteMatchTargetId); saveMatches(); closeDeleteModal(); document.getElementById('dayDetail').innerHTML = ''; render(); }
 
-function renderConvocatoriaChips() { const grid = document.getElementById('convocatoriaGrid'); if (!players.length) { grid.innerHTML = '<span style="font-size:0.78rem;color:var(--text-dim);">No hay jugadores en el plantel</span>'; return; } const sorted = [...players].sort((a, b) => (a.number || 99) - (b.number || 99)); grid.innerHTML = sorted.map(p => `<div class="conv-chip ${selectedConv.includes(p.id) ? 'selected' : ''}" onclick="toggleConv('${p.id}')">${p.photo ? `<img class="conv-photo" src="${p.photo}" alt="">` : ''}<span class="conv-num">${p.number != null ? p.number : ''}</span>${esc(p.surname || p.name)}</div>`).join(''); }
-function toggleConv(id) { const idx = selectedConv.indexOf(id); if (idx === -1) selectedConv.push(id); else selectedConv.splice(idx, 1); renderConvocatoriaChips(); }
+function renderConvocatoriaChips() { const grid = document.getElementById('convocatoriaGrid'); if (!players.length) { grid.innerHTML = '<span style="font-size:0.78rem;color:var(--text-dim);">No hay jugadores en el plantel</span>'; return; } const sorted = [...players].sort((a, b) => (a.number || 99) - (b.number || 99)); const statusEl = document.getElementById('matchStatus'); const isPlayed = statusEl && statusEl.value === 'played'; grid.innerHTML = sorted.map(p => { const sel = selectedConv.includes(p.id); const goals = selectedConvPlayerGoals[p.id] || 0; return `<div class="conv-chip-row"><div class="conv-chip ${sel ? 'selected' : ''}" onclick="toggleConv('${p.id}')">${p.photo ? `<img class="conv-photo" src="${p.photo}" alt="">` : ''}<span class="conv-num">${p.number != null ? p.number : ''}</span>${esc(p.surname || p.name)}</div>${sel && isPlayed ? `<input type="number" class="conv-goals-input" min="0" max="99" value="${goals}" onchange="setConvPlayerGoal('${p.id}', this.value)" onclick="event.stopPropagation()" title="Goles del jugador">` : ''}</div>`; }).join('') + (isPlayed ? `<div style="width:100%;margin-top:8px;"><label style="font-size:0.72rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">MVP del Partido</label><select id="mvpSelect" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.82rem;font-family:inherit;margin-top:4px;outline:none;"><option value="">Sin MVP</option>${selectedConv.map(id => { const pl = players.find(x => x.id === id); return pl ? `<option value="${id}" ${selectedMvp === id ? 'selected' : ''}>${pl.number != null ? '#' + pl.number + ' ' : ''}${esc(pl.name)} ${esc(pl.surname || '')}</option>` : ''; }).join('')}</select></div>` : ''); }
+function toggleConv(id) { const idx = selectedConv.indexOf(id); if (idx === -1) { selectedConv.push(id); selectedConvPlayerGoals[id] = 0; } else { selectedConv.splice(idx, 1); delete selectedConvPlayerGoals[id]; if (selectedMvp === id) selectedMvp = ''; } renderConvocatoriaChips(); }
+function setConvPlayerGoal(id, val) { selectedConvPlayerGoals[id] = parseInt(val) || 0; }
 function getConvHtml(match) { if (!match.players || !match.players.length) return ''; const convPlayers = match.players.map(id => players.find(p => p.id === id)).filter(Boolean); if (!convPlayers.length) return ''; const avatars = convPlayers.slice(0, 6).map(p => p.photo ? `<img class="conv-avatar" src="${p.photo}" alt="${esc(p.name)}" title="${esc(p.name)} ${esc(p.surname || '')}">` : `<div class="conv-avatar-placeholder">${esc((p.surname || p.name || '').substring(0,1))}</div>`).join(''); const extra = convPlayers.length > 6 ? `<div class="conv-avatar-placeholder">+${convPlayers.length - 6}</div>` : ''; return `<div class="conv-avatars">${avatars}${extra}</div><div class="conv-count">${convPlayers.length} convocado${convPlayers.length !== 1 ? 's' : ''}</div>`; }
 
 function getMatchesPlayed(playerId) { return matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId)).length; }
 
 function getTopTeams(playerId) {
     const teamGoals = {};
-    matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId) && m.goalsFor > 0).forEach(m => {
-        teamGoals[m.opponent] = (teamGoals[m.opponent] || 0) + m.goalsFor;
+    matches.filter(m => m.status === 'played' && m.players && m.players.includes(playerId)).forEach(m => {
+        const pg = m.playerGoals && m.playerGoals[playerId] ? m.playerGoals[playerId] : 0;
+        if (pg > 0) teamGoals[m.opponent] = (teamGoals[m.opponent] || 0) + pg;
     });
     return Object.entries(teamGoals).sort((a, b) => b[1] - a[1]).slice(0, 3);
 }
@@ -844,6 +908,66 @@ function renderStatsTab() {
     if (!history.length) { histEl.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">No hay partidos jugados en este periodo</p></div>'; return; }
     histEl.innerHTML = history.map((m, i) => { const d = new Date(m.date + 'T00:00:00'), cls = m.goalsFor > m.goalsAgainst ? 'h-win' : m.goalsFor === m.goalsAgainst ? 'h-draw' : 'h-loss'; return `<div class="history-item ${cls} anim-slide-left stagger-${Math.min(i+1, 8)}"><span class="h-date">${d.getDate()} ${MONTHS_ES[d.getMonth()].substring(0,3)}</span><span class="h-opp">vs ${esc(m.opponent)}</span><span class="h-score">${m.goalsFor} - ${m.goalsAgainst}</span></div>`; }).join('');
 }
+
+function openMatchResult(matchId) {
+    const m = matches.find(x => x.id === matchId);
+    if (!m || m.status !== 'played') return;
+    const d = new Date(m.date + 'T00:00:00');
+    const dateStr = d.getDate() + ' de ' + MONTHS_ES[d.getMonth()] + ' ' + d.getFullYear();
+    const crewBadge = 'myimage.jpg';
+
+    const headerEl = document.getElementById('resultHeader');
+    headerEl.innerHTML = `
+        <div class="result-date">${dateStr}</div>
+        <div class="result-teams">
+            <div style="text-align:center;">
+                <img class="result-crew-badge" src="${crewBadge}" alt="La Crew FC" onerror="this.style.display='none'">
+            </div>
+            <div style="text-align:center;">
+                <div class="result-score">${m.goalsFor} <span>-</span> ${m.goalsAgainst}</div>
+            </div>
+            <div style="text-align:center;">
+                ${m.badge ? `<img class="result-rival-badge" src="${m.badge}" alt="">` : `<div class="result-rival-placeholder" style="width:56px;height:56px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--text-dim);">&#9917;</div>`}
+            </div>
+        </div>
+        <div class="result-rival-name">vs ${esc(m.opponent)}</div>
+        <div class="result-tag ${m.goalsFor > m.goalsAgainst ? 'tag-win' : m.goalsFor === m.goalsAgainst ? 'tag-draw' : 'tag-loss'}">${m.goalsFor > m.goalsAgainst ? 'Victoria' : m.goalsFor === m.goalsAgainst ? 'Empate' : 'Derrota'}</div>`;
+
+    const bodyEl = document.getElementById('resultBody');
+    let bodyHtml = '';
+
+    if (m.mvp) {
+        const mvpPlayer = players.find(p => p.id === m.mvp);
+        if (mvpPlayer) {
+            bodyHtml += `<div class="result-mvp-section">
+                <div class="mvp-label">MVP</div>
+                ${mvpPlayer.photo ? `<img class="mvp-photo" src="${mvpPlayer.photo}" alt="">` : ''}
+                <div class="mvp-name">${esc(mvpPlayer.name)} ${esc(mvpPlayer.surname || '')}</div>
+            </div>`;
+        }
+    }
+
+    if (m.players && m.players.length) {
+        bodyHtml += `<div class="result-section-title">Convocados (${m.players.length})</div><div class="result-players">`;
+        m.players.forEach(id => {
+            const pl = players.find(p => p.id === id);
+            if (!pl) return;
+            const isMvp = m.mvp === id;
+            const goals = m.playerGoals && m.playerGoals[id] ? m.playerGoals[id] : 0;
+            bodyHtml += `<div class="result-player-chip ${isMvp ? 'is-mvp' : ''}">
+                ${pl.photo ? `<img class="rp-photo" src="${pl.photo}" alt="">` : ''}
+                <span class="rp-num">${pl.number != null ? pl.number : ''}</span>
+                <span class="rp-name">${esc(pl.surname || pl.name)}</span>
+                ${goals > 0 ? `<span class="rp-goals">${goals}g</span>` : ''}
+            </div>`;
+        });
+        bodyHtml += '</div>';
+    }
+
+    bodyEl.innerHTML = bodyHtml;
+    document.getElementById('matchResultModal').classList.remove('hidden');
+}
+function closeMatchResult() { document.getElementById('matchResultModal').classList.add('hidden'); }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 document.addEventListener('DOMContentLoaded', () => { init(); });
