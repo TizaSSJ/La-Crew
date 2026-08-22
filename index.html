@@ -125,7 +125,7 @@
         .cal-day.other-month { color: var(--text-dim); opacity: 0.25; }
         .cal-day .day-num { font-weight: 600; font-size: 0.8rem; margin-bottom: 2px; }
         .cal-day .day-match { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; }
-        .cal-day .day-match .cal-badge { width: 20px; height: 20px; border-radius: 3px; object-fit: contain; border: 1px solid var(--border); background: var(--surface2); }
+        .cal-day .day-match .cal-badge { width: 20px; height: 20px; border-radius: 3px; object-fit: contain; border: none; background: transparent; }
         .cal-day .day-match .cal-vs { font-size: 0.52rem; color: var(--orange); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .cal-day .match-dots { display: flex; gap: 3px; position: absolute; bottom: 4px; }
         .match-dot { width: 5px; height: 5px; border-radius: 50%; }
@@ -143,7 +143,7 @@
         .match-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--surface2); border-radius: 10px; border-left: 3px solid var(--border); transition: 0.15s; }
         .match-item:hover { background: var(--surface3); }
         .match-item.result-win { border-left-color: var(--green); } .match-item.result-draw { border-left-color: var(--orange); } .match-item.result-loss { border-left-color: var(--red); }
-        .match-badge { width: 34px; height: 34px; border-radius: 6px; object-fit: contain; border: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+        .match-badge { width: 34px; height: 34px; border-radius: 6px; object-fit: contain; border: none; flex-shrink: 0; background: transparent; }
         .match-info { flex: 1; min-width: 0; }
         .match-info .match-opponent { font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .match-info .match-meta { font-size: 0.72rem; color: var(--text-dim); display: flex; gap: 8px; flex-wrap: wrap; }
@@ -329,7 +329,7 @@
         .result-vs { font-size: 0.75rem; font-weight: 800; color: var(--text-dim); }
         .result-score { font-size: 2.4rem; font-weight: 900; color: var(--text); letter-spacing: -1px; }
         .result-score span { color: var(--orange); }
-        .result-rival-badge { width: 56px; height: 56px; border-radius: 12px; object-fit: contain; border: 2px solid var(--border); background: var(--surface2); }
+        .result-rival-badge { width: 56px; height: 56px; border-radius: 12px; object-fit: contain; border: none; background: transparent; }
         .result-rival-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-top: 8px; }
         .result-tag { display: inline-block; margin-top: 8px; font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         .result-body { padding: 0 24px 20px; }
